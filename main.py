@@ -1,20 +1,18 @@
 """
 Name: Rowan Noel-Rickert
-Write a program that can read any .arff file which has only discrete and continuous features.
-You choose the language.  It should:
 
-    [x]Ignore comments, which start with the % character
-    [x]Be able to read lakes.arff, provided here
-    [x]Store the data internally (you will need it later for implementing ML algorithms)
-    [x]Report the min and max for each numeric-valued feature
-    [x]Report all possible values for each discrete-valued feature
-    [X]Finally, find some other dataset that is of interest to you (or create one).
-        Convert it to .arff format and make sure your program runs on it.  Include it here.
-
+Write an implementation of ID3 using your dataset reader from the first homework.
+It only needs to handle discrete-valued features (for both target and descriptive features).
+You can either ignore numerical features or exit with an error if a numerical feature is detected in the dataset.
+Provide a main which trains it on lakesDiscreteFold1.arff, tests on lakesDiscreteFold2.arff, and outputs the accuracy
+(these datasets are available in the notes).  For comparison, my no-frills-implementation gets an accuracy of 84.2%
+so you should expect to get about the same.
 """
 
 import re
 from typing import Dict, List, Tuple, Set
+import ID3
+
 
 class Data:
     def __init__(self):
@@ -102,36 +100,70 @@ def arffFile(filename: str) -> Data:
     arffData.calcStats()
     return arffData
 
+#Calculates the accuracy of the model on test data
+def evaluateModel(tree: ID3.Node, testData: Data, id3Model: ID3.ID3) -> float:
+    correct = 0
+    total = len(testData.featureData[id3Model.targetAttribute])
+
+    #print("\nFirst few predictions: ")
+
+    #Create predictions for each instance in test data
+    for i in range(total):
+        # Create instance dictionary
+        instance = {attr: testData.featureData[attr][i] for attr in testData.attributes}
+
+        # Get prediction
+        prediction = id3Model.predict(tree, instance)
+        actual = testData.featureData[id3Model.targetAttribute][i]
+
+        #if i < 10:
+            #print(f"Predicted: {prediction}, Actual: {actual}")
+
+        if prediction == actual:
+            correct += 1
+    return (correct / total)*100
+
 #the main section of the program
 def main():
     try:
-        filename = input("Please input file name (making sure to add extension): ")
+        # Get the training data
+        trainFile = input("Please input training file name (making sure to add extension): ")
+        trainData = arffFile(trainFile)
 
-        #Go through the arff file
-        arffData = arffFile(filename)
 
-        #Prints the attributes and their stats
-        print("\nAttributes Stats ")
-        for name, attributeType in arffData.attributes.items():
-            print(f"\nAttribute: {name} ({attributeType})")
+        #Get test data
+        testFile = input("Please input testing file name (making sure to add extension): ")
+        testData = arffFile(testFile)
 
-            if name in arffData.numericStats:
-                stats = arffData.numericStats[name]
-                print(f" Numeric Feature:")
-                print(f" - Min: {stats['min']}")
-                print(f" - Max: {stats['max']}")
-            elif name in arffData.discreteValues:
-                values = arffData.discreteValues[name]
-                print(f" Discrete Feature:")
-                print(f" - Possible values: {sorted(values)}")
+        #Get the target attribute from available attributes
+        #print("\nAvailable attributes: ", list(trainData.attributes.keys()))
+        targetAttribute = input("Enter the target attribute name: ")
 
-        return arffData
+        print("Target values in training:", set(trainData.featureData[targetAttribute]))
+        print("Target values in training:", set(testData.featureData[targetAttribute]))
 
-    except FileNotFoundError:
-      print(f"Error: File '{filename}' not found")
+        #Create and train ID3 Model
+        print("\nTraining ID3 decision tree...")
+        id3 = ID3.ID3(trainData, targetAttribute, maxDepth=5)
+        tree = id3.train()
 
+        #Print the tree structure
+        print("\nDecision Tree Structure: ")
+        id3.printTree(tree)
+
+        #Evaluate on the test data
+        print("\nEvaluating on test data...")
+        accuracy = evaluateModel(tree, testData, id3)
+        #formats it so it only goes to 1 decimal place and is a floating number
+        print(f"\nAccuracy on test data: {accuracy:.1f}%")
+
+        return trainData, tree
+    except FileNotFoundError as e:
+        print(f"Error: File not found - {str(e)}")
     except Exception as e:
         print(f"An error occurred: {str(e)}")
+
+
 
 if __name__ == "__main__":
     main()
