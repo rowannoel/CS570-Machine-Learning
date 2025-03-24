@@ -20,7 +20,7 @@ Takes in .arff files and uses stored information from training file within dicti
 
 Takes in .arff files and uses stored information from training file within dictionaries to create predictions, with the option to use Laplace smoothing
 
-#Technologies Used
+# Technologies Used
 
     Python (re, typing, collections)
 
@@ -28,7 +28,7 @@ Takes in .arff files and uses stored information from training file within dicti
 
     Algorithmic optimization
 
-#How to Run
+# How to Run
 
     Clone this repository:
 
@@ -39,6 +39,6 @@ Run individual scripts using Python 3:
 
     python project.py
 
-#Contact
+# Contact
 
 Feel free to reach out via LinkedIn or check out more of my work on GitHub.
